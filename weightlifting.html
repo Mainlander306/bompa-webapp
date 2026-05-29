@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>20-Week OLY Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a38;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --faint: #2a2a38;
+
+    --phase-aa: #1a3d2a;
+    --phase-aa-accent: #3ddc84;
+    --phase-hyp: #1a2a3d;
+    --phase-hyp-accent: #4da6ff;
+    --phase-ms1: #2d1a3d;
+    --phase-ms1-accent: #b57aff;
+    --phase-ms2: #3d2a1a;
+    --phase-ms2-accent: #ff9a3d;
+    --phase-peak: #3d1a1a;
+    --phase-peak-accent: #ff4d4d;
+    --phase-comp: #3d370a;
+    --phase-comp-accent: #ffd700;
+    --phase-trans: #1a1a1a;
+    --phase-trans-accent: #888888;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  #app-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-brand { font-family: 'Barlow Condensed', sans-serif; }
+  .header-brand .sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .header-brand .main { font-size: 18px; font-weight: 900; color: var(--text); line-height: 1; }
+  .header-stats { text-align: right; font-size: 11px; }
+  .header-stats .label { color: var(--muted); }
+  .header-stats .val { color: #ffd700; font-weight: 700; font-size: 13px; }
+
+  /* ── MAIN CONTAINER ── */
+  #main { max-width: 480px; margin: 0 auto; padding: 0; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── WEEK LIST ── */
+  #phase-legend {
+    padding: 12px 12px 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .legend-pill {
+    border-radius: 8px; padding: 6px 10px;
+    font-size: 10px; letter-spacing: 0.5px;
+    display: flex; gap: 6px; align-items: flex-start;
+  }
+  .legend-pill .wk { font-weight: 700; white-space: nowrap; }
+  .legend-pill .nm { opacity: 0.8; line-height: 1.3; }
+
+  #week-list { padding: 10px 12px 24px; display: flex; flex-direction: column; gap: 8px; }
+
+  .week-card {
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .week-card.selected { border-color: var(--phase-accent, #888); }
+
+  .week-card-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+  }
+  .week-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px; font-weight: 900;
+    width: 36px; text-align: center;
+    line-height: 1; flex-shrink: 0;
+    color: var(--muted);
+  }
+  .week-card.selected .week-num { color: var(--phase-accent, #fff); }
+  .week-meta { flex: 1; min-width: 0; }
+  .week-phase { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .week-bars { display: flex; gap: 4px; margin-top: 6px; }
+  .week-bar { height: 4px; flex: 1; border-radius: 2px; background: var(--faint); }
+  .week-bar.done { background: #3ddc84; }
+  .week-pct { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .week-card.selected .week-pct { color: var(--phase-accent, #fff); }
+
+  .week-days-grid {
+    display: none;
+    padding: 0 12px 12px;
+    grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .week-card.selected .week-days-grid { display: grid; }
+
+  .day-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text);
+    font-family: inherit;
+  }
+  .day-btn:hover { border-color: var(--phase-accent, #888); }
+  .day-btn.workout-done { border-color: #3ddc84; background: rgba(61,220,132,0.08); }
+
+  .day-btn-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .day-label { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .day-done-badge { color: #3ddc84; font-size: 14px; }
+  .day-title { font-size: 10px; color: var(--muted); line-height: 1.3; }
+  .day-ex-count { font-size: 10px; color: var(--faint); margin-top: 4px; }
+
+  /* ── DAY VIEW ── */
+  #day-view { display: none; }
+  #day-view.active { display: block; }
+
+  #day-header {
+    padding: 12px 14px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  #back-btn {
+    background: none; border: none; color: var(--muted);
+    font-family: inherit; font-size: 11px; cursor: pointer;
+    padding: 0 0 10px 0; display: flex; align-items: center; gap: 4px;
+  }
+  #back-btn:hover { color: var(--text); }
+
+  #day-header-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  #day-title-block .day-weekday { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+  #day-title-block .day-session { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; line-height: 1.1; margin-top: 2px; }
+  #day-title-block .day-phase { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  #mark-done-btn {
+    flex-shrink: 0;
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 11px; font-weight: 700; font-family: inherit;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  #mark-done-btn:hover { border-color: #3ddc84; color: #3ddc84; }
+  #mark-done-btn.done { background: rgba(61,220,132,0.15); border-color: #3ddc84; color: #3ddc84; }
+
+  #day-note {
+    margin-top: 10px; padding: 8px 12px;
+    background: rgba(0,0,0,0.3); border-radius: 8px;
+    font-size: 11px; color: var(--muted); font-style: italic; line-height: 1.5;
+    border-left: 3px solid var(--phase-accent-val, #888);
+  }
+
+  /* ── EXERCISE LIST ── */
+  #exercise-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  .ex-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .ex-card-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  }
+  .ex-name { font-size: 14px; font-weight: 700; line-height: 1.2; }
+  .ex-badge {
+    flex-shrink: 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 900;
+    padding: 2px 8px; border-radius: 6px;
+    background: rgba(0,0,0,0.4);
+    white-space: nowrap;
+  }
+  .ex-meta {
+    padding: 6px 14px;
+    display: flex; gap: 16px;
+    font-size: 11px; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .ex-meta span { display: flex; align-items: center; gap: 4px; }
+
+  .set-row { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .set-btn {
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 900;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .set-btn:hover { border-color: var(--phase-accent-val, #888); color: var(--text); }
+  .set-btn.done { background: #3ddc84; border-color: #3ddc84; color: #0a0a0f; }
+
+  .rest-day-msg { padding: 16px 14px; font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ── DAY NAV ── */
+  #day-nav { display: flex; gap: 8px; padding: 4px 12px 32px; }
+  .day-nav-btn {
+    flex: 1; padding: 13px;
+    border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .day-nav-btn:hover { border-color: var(--text); color: var(--text); }
+  .day-nav-btn.forward {
+    background: var(--surface);
+  }
+
+  /* ── PHASE COLORS (applied via JS) ── */
+  .ph-aa   { --phase-accent: var(--phase-aa-accent);   background: var(--phase-aa);   color: var(--phase-aa-accent); }
+  .ph-hyp  { --phase-accent: var(--phase-hyp-accent);  background: var(--phase-hyp);  color: var(--phase-hyp-accent); }
+  .ph-ms1  { --phase-accent: var(--phase-ms1-accent);  background: var(--phase-ms1);  color: var(--phase-ms1-accent); }
+  .ph-ms2  { --phase-accent: var(--phase-ms2-accent);  background: var(--phase-ms2);  color: var(--phase-ms2-accent); }
+  .ph-peak { --phase-accent: var(--phase-peak-accent); background: var(--phase-peak); color: var(--phase-peak-accent); }
+  .ph-comp { --phase-accent: var(--phase-comp-accent); background: var(--phase-comp); color: var(--phase-comp-accent); }
+  .ph-trans{ --phase-accent: var(--phase-trans-accent);background: var(--phase-trans);color: var(--phase-trans-accent); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header id="app-header">
+  <div class="header-brand">
+    <div class="sub">Bompa Periodization</div>
+    <div class="main">20-WEEK OLY</div>
+  </div>
+  <div class="header-stats">
+    <div class="label">Snatch / C&J</div>
+    <div class="val">215 / 260 lbs</div>
+  </div>
+</header>
+
+<div id="main">
+
+  <!-- WEEK LIST VIEW -->
+  <div id="week-view" class="view active">
+    <div id="phase-legend"></div>
+    <div id="week-list"></div>
+  </div>
+
+  <!-- DAY VIEW -->
+  <div id="day-view" class="view">
+    <div id="day-header">
+      <button id="back-btn">← Back to weeks</button>
+      <div id="day-header-content">
+        <div id="day-title-block">
+          <div class="day-weekday" id="dh-weekday"></div>
+          <div class="day-session" id="dh-title"></div>
+          <div class="day-phase" id="dh-phase"></div>
+        </div>
+        <button id="mark-done-btn">Mark Done</button>
+      </div>
+      <div id="day-note"></div>
+    </div>
+    <div id="exercise-list"></div>
+    <div id="day-nav"></div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// PROGRAM DATA
+// ════════════════════════════════════════════════════════════
+const PROGRAM = {
+  weeks: [
+    { week:1, phase:"Phase 1: Anatomical Adaptation", phClass:"ph-aa", days:[
+      { label:"Monday", title:"Snatch Patterns + Lower Body", note:"Focus on tempo and positions. Eccentric emphasis on all main lifts.", exercises:[
+        {name:"Muscle Snatch",sets:3,reps:"8",load:"75-86 lbs",rest:"90s"},
+        {name:"Snatch Grip RDL (3s ecc)",sets:3,reps:"10",load:"86-97 lbs",rest:"90s"},
+        {name:"Back Squat (4s ecc)",sets:3,reps:"10",load:"203 lbs",rest:"90s"},
+        {name:"Walking Lunges",sets:3,reps:"8/leg",load:"BW or 25lb DBs",rest:"60s"},
+        {name:"Plank Hold",sets:3,reps:"45s",load:"BW",rest:"60s"},
+        {name:"Back Extensions (3s ecc)",sets:3,reps:"12",load:"BW+25",rest:"60s"},
+      ]},
+      { label:"Tuesday", title:"Clean Patterns + Upper Pull", note:"Controlled tempo throughout. Master positions before adding load.", exercises:[
+        {name:"Muscle Clean",sets:3,reps:"8",load:"91-104 lbs",rest:"90s"},
+        {name:"Clean Grip RDL (3s ecc)",sets:3,reps:"10",load:"104-117 lbs",rest:"90s"},
+        {name:"Front Squat (4s ecc)",sets:3,reps:"10",load:"160 lbs",rest:"90s"},
+        {name:"Pendlay Rows",sets:3,reps:"10",load:"135 lbs",rest:"60s"},
+        {name:"GHD Sit-Ups",sets:3,reps:"15",load:"BW",rest:"60s"},
+        {name:"Side Plank",sets:3,reps:"30s/side",load:"BW",rest:"45s"},
+      ]},
+      { label:"Thursday", title:"Jerk Patterns + Lower Body", note:"Jerk work is purely positional. Emphasize lockout stability and footwork.", exercises:[
+        {name:"Behind Neck Push Press",sets:3,reps:"8",load:"91-104 lbs",rest:"90s"},
+        {name:"Tall Jerk / Jerk Balance",sets:4,reps:"5",load:"78-91 lbs",rest:"60s"},
+        {name:"Back Squat (4s ecc)",sets:3,reps:"10",load:"203 lbs",rest:"90s"},
+        {name:"Bulgarian Split Squat (3s ecc)",sets:3,reps:"8/leg",load:"30lb DBs",rest:"60s"},
+        {name:"Hanging Leg Raises",sets:3,reps:"12",load:"BW",rest:"60s"},
+        {name:"Banded Good Mornings",sets:3,reps:"12",load:"Light Band",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Full Lifts (Light) + General Strength", note:"Technique day. Keep loads light and prioritize speed under the bar.", exercises:[
+        {name:"Power Snatch from Hang",sets:4,reps:"5",load:"86-108 lbs",rest:"90s"},
+        {name:"Power Clean from Hang",sets:4,reps:"5",load:"104-130 lbs",rest:"90s"},
+        {name:"Step-Ups",sets:3,reps:"8/leg",load:"35lb DBs",rest:"60s"},
+        {name:"Dumbbell Rows",sets:3,reps:"10/arm",load:"50 lbs",rest:"60s"},
+        {name:"Ab Wheel Rollouts",sets:3,reps:"10",load:"BW",rest:"60s"},
+      ]},
+    ]},
+    { week:2, phase:"Phase 1: Anatomical Adaptation", phClass:"ph-aa", days:[
+      { label:"Monday", title:"Snatch Patterns + Lower Body", note:"Slight load increase from Week 1. Maintain tempo integrity.", exercises:[
+        {name:"Muscle Snatch",sets:3,reps:"8",load:"82-92 lbs",rest:"90s"},
+        {name:"Snatch Grip RDL (3s ecc)",sets:3,reps:"10",load:"92-103 lbs",rest:"90s"},
+        {name:"Back Squat (4s ecc)",sets:3,reps:"10",load:"215 lbs",rest:"90s"},
+        {name:"Walking Lunges",sets:3,reps:"10/leg",load:"30lb DBs",rest:"60s"},
+        {name:"Plank Hold",sets:3,reps:"50s",load:"BW",rest:"60s"},
+        {name:"Back Extensions (3s ecc)",sets:3,reps:"12",load:"BW+35",rest:"60s"},
+      ]},
+      { label:"Tuesday", title:"Clean Patterns + Upper Pull", note:"Small progression. Keep eccentric phases strict and controlled.", exercises:[
+        {name:"Muscle Clean",sets:3,reps:"8",load:"99-112 lbs",rest:"90s"},
+        {name:"Clean Grip RDL (3s ecc)",sets:3,reps:"10",load:"112-125 lbs",rest:"90s"},
+        {name:"Front Squat (4s ecc)",sets:3,reps:"10",load:"170 lbs",rest:"90s"},
+        {name:"Pendlay Rows",sets:3,reps:"10",load:"145 lbs",rest:"60s"},
+        {name:"GHD Sit-Ups",sets:3,reps:"18",load:"BW",rest:"60s"},
+        {name:"Side Plank",sets:3,reps:"35s/side",load:"BW",rest:"45s"},
+      ]},
+      { label:"Thursday", title:"Jerk Patterns + Lower Body", note:"Continue building positional strength in the jerk. Add slight load.", exercises:[
+        {name:"Behind Neck Push Press",sets:3,reps:"8",load:"99-112 lbs",rest:"90s"},
+        {name:"Tall Jerk / Jerk Balance",sets:4,reps:"5",load:"86-99 lbs",rest:"60s"},
+        {name:"Back Squat (4s ecc)",sets:3,reps:"10",load:"215 lbs",rest:"90s"},
+        {name:"Bulgarian Split Squat (3s ecc)",sets:3,reps:"8/leg",load:"35lb DBs",rest:"60s"},
+        {name:"Hanging Leg Raises",sets:3,reps:"14",load:"BW",rest:"60s"},
+        {name:"Banded Good Mornings",sets:3,reps:"15",load:"Medium Band",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Full Lifts (Light) + General Strength", note:"Small load bump on classic lifts. Still technique-focused.", exercises:[
+        {name:"Power Snatch from Hang",sets:4,reps:"5",load:"97-114 lbs",rest:"90s"},
+        {name:"Power Clean from Hang",sets:4,reps:"5",load:"117-138 lbs",rest:"90s"},
+        {name:"Step-Ups",sets:3,reps:"8/leg",load:"40lb DBs",rest:"60s"},
+        {name:"Dumbbell Rows",sets:3,reps:"10/arm",load:"55 lbs",rest:"60s"},
+        {name:"Ab Wheel Rollouts",sets:3,reps:"12",load:"BW",rest:"60s"},
+      ]},
+    ]},
+    { week:3, phase:"Phase 1: Anatomical Adaptation (Deload)", phClass:"ph-aa", days:[
+      { label:"Monday", title:"Snatch Patterns + Lower Body", note:"Deload week. Reduce volume ~30%. Maintain technique quality.", exercises:[
+        {name:"Muscle Snatch",sets:3,reps:"6",load:"75 lbs",rest:"90s"},
+        {name:"Snatch Grip RDL (3s ecc)",sets:3,reps:"8",load:"86 lbs",rest:"90s"},
+        {name:"Back Squat (4s ecc)",sets:3,reps:"8",load:"182 lbs",rest:"90s"},
+        {name:"Walking Lunges",sets:2,reps:"8/leg",load:"25lb DBs",rest:"60s"},
+        {name:"Plank Hold",sets:2,reps:"40s",load:"BW",rest:"60s"},
+      ]},
+      { label:"Tuesday", title:"Clean Patterns + Upper Pull", note:"Reduced volume. Focus on recovery and movement quality.", exercises:[
+        {name:"Muscle Clean",sets:3,reps:"6",load:"91 lbs",rest:"90s"},
+        {name:"Clean Grip RDL (3s ecc)",sets:3,reps:"8",load:"104 lbs",rest:"90s"},
+        {name:"Front Squat (4s ecc)",sets:3,reps:"8",load:"144 lbs",rest:"90s"},
+        {name:"Pendlay Rows",sets:2,reps:"8",load:"125 lbs",rest:"60s"},
+        {name:"GHD Sit-Ups",sets:2,reps:"12",load:"BW",rest:"60s"},
+      ]},
+      { label:"Thursday", title:"Jerk Patterns + Mobility", note:"Light session. Spend extra time on mobility and stretching.", exercises:[
+        {name:"Behind Neck Push Press",sets:3,reps:"6",load:"91 lbs",rest:"90s"},
+        {name:"Tall Jerk / Jerk Balance",sets:3,reps:"4",load:"78 lbs",rest:"60s"},
+        {name:"Back Squat (4s ecc)",sets:2,reps:"8",load:"182 lbs",rest:"90s"},
+        {name:"Hanging Leg Raises",sets:2,reps:"10",load:"BW",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Full Lifts (Light)", note:"Deload. Crisp reps, no grinding. Prepare for hypertrophy phase.", exercises:[
+        {name:"Power Snatch from Hang",sets:3,reps:"4",load:"86-103 lbs",rest:"90s"},
+        {name:"Power Clean from Hang",sets:3,reps:"4",load:"104-125 lbs",rest:"90s"},
+        {name:"Dumbbell Rows",sets:2,reps:"8/arm",load:"45 lbs",rest:"60s"},
+      ]},
+    ]},
+    { week:4, phase:"Phase 2: Hypertrophy", phClass:"ph-hyp", days:[
+      { label:"Monday", title:"Snatch + Squats (Volume)", note:"Explosive concentric on all reps. Higher volume phase begins.", exercises:[
+        {name:"Snatch Pull (from floor)",sets:4,reps:"6",load:"151-161 lbs",rest:"90s"},
+        {name:"Hang Power Snatch",sets:4,reps:"4",load:"129-140 lbs",rest:"2min"},
+        {name:"Back Squat",sets:4,reps:"8",load:"263 lbs",rest:"90s"},
+        {name:"Snatch Grip Push Press",sets:3,reps:"8",load:"108-118 lbs",rest:"90s"},
+        {name:"Barbell Row",sets:3,reps:"10",load:"155 lbs",rest:"60s"},
+        {name:"Weighted Plank",sets:3,reps:"40s",load:"25lb plate",rest:"60s"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Volume)", note:"Maintain fast concentric phase. Focus on the pull mechanics.", exercises:[
+        {name:"Clean Pull (from floor)",sets:4,reps:"6",load:"182-195 lbs",rest:"90s"},
+        {name:"Hang Power Clean",sets:4,reps:"4",load:"156-169 lbs",rest:"2min"},
+        {name:"Push Press",sets:4,reps:"6",load:"143-156 lbs",rest:"90s"},
+        {name:"Front Squat",sets:4,reps:"8",load:"208 lbs",rest:"90s"},
+        {name:"GHD Hip Extension",sets:3,reps:"12",load:"BW+25",rest:"60s"},
+        {name:"Ab Wheel Rollouts",sets:3,reps:"12",load:"BW",rest:"60s"},
+      ]},
+      { label:"Thursday", title:"Snatch Variations + Hypertrophy Accessory", note:"Block work for positional strength. Hypertrophy accessory work.", exercises:[
+        {name:"Snatch from Blocks (knee)",sets:5,reps:"3",load:"140-151 lbs",rest:"2min"},
+        {name:"Overhead Squat",sets:4,reps:"5",load:"118-129 lbs",rest:"90s"},
+        {name:"Back Squat",sets:3,reps:"8",load:"271 lbs",rest:"90s"},
+        {name:"Romanian Deadlift",sets:3,reps:"8",load:"225 lbs",rest:"90s"},
+        {name:"Dumbbell Lateral Raises",sets:3,reps:"12",load:"20 lbs",rest:"60s"},
+        {name:"Hanging Leg Raises",sets:3,reps:"15",load:"BW",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variations + Hypertrophy", note:"Build volume on the classics while adding structural mass.", exercises:[
+        {name:"Clean from Blocks (knee)",sets:5,reps:"3",load:"169-182 lbs",rest:"2min"},
+        {name:"Jerk from Rack",sets:4,reps:"3",load:"156-169 lbs",rest:"2min"},
+        {name:"Front Squat",sets:3,reps:"8",load:"214 lbs",rest:"90s"},
+        {name:"Barbell Hip Thrust",sets:3,reps:"10",load:"225 lbs",rest:"60s"},
+        {name:"Dumbbell Rows",sets:3,reps:"10/arm",load:"60 lbs",rest:"60s"},
+      ]},
+    ]},
+    { week:5, phase:"Phase 2: Hypertrophy", phClass:"ph-hyp", days:[
+      { label:"Monday", title:"Snatch + Squats (Volume)", note:"Increased loading. Maintain explosive intent on every concentric.", exercises:[
+        {name:"Snatch Pull (from floor)",sets:4,reps:"5",load:"161-172 lbs",rest:"2min"},
+        {name:"Hang Power Snatch",sets:5,reps:"3",load:"140-151 lbs",rest:"2min"},
+        {name:"Back Squat",sets:4,reps:"6",load:"284 lbs",rest:"2min"},
+        {name:"Snatch Grip Push Press",sets:3,reps:"6",load:"118-129 lbs",rest:"90s"},
+        {name:"Barbell Row",sets:4,reps:"8",load:"165 lbs",rest:"60s"},
+        {name:"Weighted Plank",sets:3,reps:"45s",load:"35lb plate",rest:"60s"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Volume)", note:"Progressive overload from Week 4. Lower reps, slightly heavier.", exercises:[
+        {name:"Clean Pull (from floor)",sets:4,reps:"5",load:"195-208 lbs",rest:"2min"},
+        {name:"Hang Power Clean",sets:5,reps:"3",load:"169-182 lbs",rest:"2min"},
+        {name:"Push Press",sets:4,reps:"5",load:"156-169 lbs",rest:"2min"},
+        {name:"Front Squat",sets:4,reps:"6",load:"224 lbs",rest:"2min"},
+        {name:"GHD Hip Extension",sets:3,reps:"15",load:"BW+35",rest:"60s"},
+        {name:"Weighted Sit-Ups",sets:3,reps:"15",load:"25lb plate",rest:"60s"},
+      ]},
+      { label:"Thursday", title:"Snatch Variations + Hypertrophy", note:"Load increase on block work and squats.", exercises:[
+        {name:"Snatch from Blocks (knee)",sets:5,reps:"3",load:"151-161 lbs",rest:"2min"},
+        {name:"Overhead Squat",sets:4,reps:"4",load:"129-140 lbs",rest:"2min"},
+        {name:"Back Squat",sets:4,reps:"6",load:"292 lbs",rest:"2min"},
+        {name:"Romanian Deadlift",sets:3,reps:"8",load:"245 lbs",rest:"90s"},
+        {name:"Dumbbell Lateral Raises",sets:3,reps:"12",load:"25 lbs",rest:"60s"},
+        {name:"Hanging Leg Raises",sets:3,reps:"18",load:"BW",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variations + Hypertrophy", note:"Progressive overload across the board. Volume peaking.", exercises:[
+        {name:"Clean from Blocks (knee)",sets:5,reps:"3",load:"182-195 lbs",rest:"2min"},
+        {name:"Jerk from Rack",sets:5,reps:"3",load:"169-182 lbs",rest:"2min"},
+        {name:"Front Squat",sets:3,reps:"6",load:"230 lbs",rest:"2min"},
+        {name:"Barbell Hip Thrust",sets:3,reps:"10",load:"245 lbs",rest:"60s"},
+        {name:"Dumbbell Rows",sets:3,reps:"10/arm",load:"65 lbs",rest:"60s"},
+      ]},
+    ]},
+    { week:6, phase:"Phase 2: Hypertrophy (Deload)", phClass:"ph-hyp", days:[
+      { label:"Monday", title:"Snatch + Squats (Reduced Volume)", note:"Deload. ~35% volume reduction. Prepare for max strength phase.", exercises:[
+        {name:"Snatch Pull (from floor)",sets:3,reps:"4",load:"140 lbs",rest:"90s"},
+        {name:"Hang Power Snatch",sets:3,reps:"3",load:"129 lbs",rest:"2min"},
+        {name:"Back Squat",sets:3,reps:"6",load:"243 lbs",rest:"90s"},
+        {name:"Barbell Row",sets:2,reps:"8",load:"135 lbs",rest:"60s"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Reduced Volume)", note:"Deload. Focus on recovery. Light, crisp, fast.", exercises:[
+        {name:"Clean Pull (from floor)",sets:3,reps:"4",load:"169 lbs",rest:"90s"},
+        {name:"Hang Power Clean",sets:3,reps:"3",load:"156 lbs",rest:"2min"},
+        {name:"Push Press",sets:3,reps:"4",load:"143 lbs",rest:"90s"},
+        {name:"Front Squat",sets:3,reps:"6",load:"192 lbs",rest:"90s"},
+      ]},
+      { label:"Thursday", title:"Technique + Mobility", note:"Technique refinement. Groove the full lifts at moderate loads.", exercises:[
+        {name:"Snatch (full, from floor)",sets:4,reps:"2",load:"118-129 lbs",rest:"2min"},
+        {name:"Clean & Jerk",sets:4,reps:"1+1",load:"143-156 lbs",rest:"2min"},
+        {name:"Overhead Squat",sets:3,reps:"4",load:"108 lbs",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"Light Full Lifts", note:"Active recovery. Let the body supercompensate.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"2",load:"118 lbs",rest:"2min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"143 lbs",rest:"2min"},
+        {name:"Back Squat",sets:2,reps:"5",load:"223 lbs",rest:"90s"},
+      ]},
+    ]},
+    { week:7, phase:"Phase 3: Maximum Strength I", phClass:"ph-ms1", days:[
+      { label:"Monday", title:"Snatch + Back Squat (Intensity)", note:"Begin loading heavier. Full rest between working sets.", exercises:[
+        {name:"Snatch (full, from floor)",sets:6,reps:"2",load:"151-168 lbs",rest:"3min"},
+        {name:"Snatch Pull",sets:3,reps:"3",load:"183-194 lbs",rest:"3min"},
+        {name:"Back Squat",sets:5,reps:"5",load:"304 lbs",rest:"3min"},
+        {name:"Romanian Deadlift",sets:3,reps:"6",load:"265 lbs",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Intensity)", note:"Build to moderate-heavy singles in the C&J. Squat volume decreasing.", exercises:[
+        {name:"Clean & Jerk",sets:6,reps:"1+1",load:"182-203 lbs",rest:"3min"},
+        {name:"Clean Pull",sets:3,reps:"3",load:"221-234 lbs",rest:"3min"},
+        {name:"Front Squat",sets:5,reps:"4",load:"240 lbs",rest:"3min"},
+        {name:"Pendlay Rows",sets:3,reps:"6",load:"175 lbs",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Snatch Variations + Squat", note:"Hang variations to strengthen receiving positions.", exercises:[
+        {name:"Hang Snatch (below knee)",sets:5,reps:"2",load:"146-161 lbs",rest:"3min"},
+        {name:"Snatch Grip Push Press",sets:3,reps:"5",load:"129-140 lbs",rest:"2min"},
+        {name:"Back Squat",sets:4,reps:"4",load:"316 lbs",rest:"3min"},
+        {name:"GHD Hip Extensions",sets:3,reps:"10",load:"BW+45",rest:"60s"},
+        {name:"Weighted Plank",sets:3,reps:"40s",load:"45lb plate",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variations + Front Squat", note:"Intensity building across the week.", exercises:[
+        {name:"Hang Clean (below knee)",sets:5,reps:"2",load:"177-195 lbs",rest:"3min"},
+        {name:"Jerk from Rack",sets:4,reps:"2",load:"182-195 lbs",rest:"3min"},
+        {name:"Front Squat",sets:4,reps:"4",load:"250 lbs",rest:"3min"},
+        {name:"Barbell Rows",sets:3,reps:"6",load:"175 lbs",rest:"2min"},
+      ]},
+    ]},
+    { week:8, phase:"Phase 3: Maximum Strength I", phClass:"ph-ms1", days:[
+      { label:"Monday", title:"Snatch + Back Squat", note:"Reps down slightly, load up. Building toward heavy work.", exercises:[
+        {name:"Snatch (full)",sets:6,reps:"2",load:"161-176 lbs",rest:"3min"},
+        {name:"Snatch Pull",sets:3,reps:"3",load:"194-204 lbs",rest:"3-4min"},
+        {name:"Back Squat",sets:5,reps:"4",load:"316 lbs",rest:"3-4min"},
+        {name:"Romanian Deadlift",sets:3,reps:"5",load:"285 lbs",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat", note:"Loading up on pulls and squats. Maintain technical precision.", exercises:[
+        {name:"Clean & Jerk",sets:6,reps:"1+1",load:"195-213 lbs",rest:"3min"},
+        {name:"Clean Pull",sets:3,reps:"3",load:"234-247 lbs",rest:"3-4min"},
+        {name:"Front Squat",sets:5,reps:"3",load:"256 lbs",rest:"3-4min"},
+        {name:"Pendlay Rows",sets:3,reps:"6",load:"185 lbs",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Snatch Variations + Squat", note:"Heavier squat triples. Pulling positions must be sharp.", exercises:[
+        {name:"Hang Snatch (below knee)",sets:5,reps:"2",load:"157-168 lbs",rest:"3min"},
+        {name:"Snatch Grip Push Press",sets:3,reps:"4",load:"135-146 lbs",rest:"2min"},
+        {name:"Back Squat",sets:4,reps:"3",load:"332 lbs",rest:"4min"},
+        {name:"GHD Hip Extensions",sets:3,reps:"10",load:"BW+55",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variations + Front Squat", note:"Heavier across the board. Prioritize recovery between sessions.", exercises:[
+        {name:"Hang Clean (below knee)",sets:5,reps:"2",load:"190-203 lbs",rest:"3min"},
+        {name:"Jerk from Rack",sets:4,reps:"2",load:"195-208 lbs",rest:"3min"},
+        {name:"Front Squat",sets:4,reps:"3",load:"262 lbs",rest:"4min"},
+      ]},
+    ]},
+    { week:9, phase:"Phase 3: Maximum Strength I", phClass:"ph-ms1", days:[
+      { label:"Monday", title:"Snatch + Back Squat (Peak of Phase)", note:"Peak loading for this phase. Heavy singles/doubles in snatch.", exercises:[
+        {name:"Snatch (full)",sets:5,reps:"1-2",load:"172-187 lbs",rest:"3-4min"},
+        {name:"Snatch Pull",sets:3,reps:"2",load:"204-215 lbs",rest:"4min"},
+        {name:"Back Squat",sets:5,reps:"3",load:"336 lbs",rest:"4min"},
+        {name:"Romanian Deadlift",sets:3,reps:"5",load:"295 lbs",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Peak)", note:"Building toward heavy C&J singles. Full recovery between sets.", exercises:[
+        {name:"Clean & Jerk",sets:5,reps:"1+1",load:"208-226 lbs",rest:"3-4min"},
+        {name:"Clean Pull",sets:3,reps:"2",load:"247-260 lbs",rest:"4min"},
+        {name:"Front Squat",sets:5,reps:"2",load:"266 lbs",rest:"4min"},
+        {name:"Pendlay Rows",sets:3,reps:"5",load:"195 lbs",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Snatch Variations + Squat", note:"Heavy doubles on squat. Maintain speed on the hang snatches.", exercises:[
+        {name:"Hang Snatch (below knee)",sets:5,reps:"1-2",load:"168-178 lbs",rest:"3min"},
+        {name:"Overhead Squat",sets:3,reps:"3",load:"151-161 lbs",rest:"2min"},
+        {name:"Back Squat",sets:4,reps:"2",load:"344 lbs",rest:"4-5min"},
+        {name:"Weighted Plank",sets:3,reps:"40s",load:"55lb plate",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variations + Front Squat", note:"Highest intensity week of Phase 3. Manage fatigue carefully.", exercises:[
+        {name:"Hang Clean (below knee)",sets:5,reps:"1-2",load:"203-216 lbs",rest:"3min"},
+        {name:"Jerk from Rack",sets:4,reps:"2",load:"203-216 lbs",rest:"3-4min"},
+        {name:"Front Squat",sets:4,reps:"2",load:"272 lbs",rest:"4-5min"},
+      ]},
+    ]},
+    { week:10, phase:"Phase 3: Maximum Strength I (Deload)", phClass:"ph-ms1", days:[
+      { label:"Monday", title:"Snatch + Back Squat (Reduced)", note:"Deload. Reduce volume ~40%. Speed and quality only.", exercises:[
+        {name:"Snatch (full)",sets:4,reps:"2",load:"151-161 lbs",rest:"2-3min"},
+        {name:"Back Squat",sets:3,reps:"3",load:"284 lbs",rest:"3min"},
+        {name:"Romanian Deadlift",sets:2,reps:"5",load:"225 lbs",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Reduced)", note:"Deload. Focus on bar speed and crisp technique.", exercises:[
+        {name:"Clean & Jerk",sets:4,reps:"1+1",load:"182-195 lbs",rest:"2-3min"},
+        {name:"Front Squat",sets:3,reps:"3",load:"224 lbs",rest:"3min"},
+        {name:"Pendlay Rows",sets:2,reps:"6",load:"155 lbs",rest:"60s"},
+      ]},
+      { label:"Thursday", title:"Light Technique", note:"Very light. Active recovery and movement prep for next phase.", exercises:[
+        {name:"Hang Power Snatch",sets:3,reps:"3",load:"129 lbs",rest:"2min"},
+        {name:"Hang Power Clean + Push Press",sets:3,reps:"2+2",load:"156 lbs",rest:"2min"},
+        {name:"Overhead Squat",sets:3,reps:"3",load:"118 lbs",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"REST", note:"Complete rest or light mobility/stretching only. Supercompensation.", exercises:[
+        {name:"Full Rest / Active Recovery",sets:0,reps:"---",load:"---",rest:"---"},
+      ]},
+    ]},
+    { week:11, phase:"Phase 4: Max Strength II / Power Conversion", phClass:"ph-ms2", days:[
+      { label:"Monday", title:"Snatch (Heavy) + Back Squat", note:"Heavy singles on snatch. Box jumps begin power conversion.", exercises:[
+        {name:"Snatch (full)",sets:6,reps:"1",load:"Build to 183-194 lbs",rest:"3-4min"},
+        {name:"Snatch Pull",sets:3,reps:"2",load:"204-226 lbs",rest:"4min"},
+        {name:"Back Squat",sets:5,reps:"3",load:"336-344 lbs",rest:"4min"},
+        {name:"Box Jumps (standing)",sets:4,reps:"3",load:"30-36 inch",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk (Heavy) + Front Squat", note:"Heavy C&J. Plyometric work begins. Full recovery required.", exercises:[
+        {name:"Clean & Jerk",sets:6,reps:"1+1",load:"Build to 221-234 lbs",rest:"3-4min"},
+        {name:"Clean Pull",sets:3,reps:"2",load:"247-273 lbs",rest:"4min"},
+        {name:"Front Squat",sets:5,reps:"2",load:"266-272 lbs",rest:"4min"},
+        {name:"Depth Jumps (12 inch box)",sets:3,reps:"3",load:"BW",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Snatch Variants + Speed Squats", note:"Speed and power focus. Maximum intent on every rep.", exercises:[
+        {name:"Power Snatch",sets:5,reps:"2",load:"151-161 lbs",rest:"2min"},
+        {name:"Snatch Balance",sets:4,reps:"2",load:"140-151 lbs",rest:"2min"},
+        {name:"Back Squat (speed, explosive)",sets:5,reps:"3",load:"243-263 lbs",rest:"90s"},
+        {name:"Broad Jumps",sets:4,reps:"3",load:"BW",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variants + Speed Squats", note:"Dual stimulus: heavy jerk recoveries + speed/power work.", exercises:[
+        {name:"Power Clean + Push Jerk",sets:5,reps:"2+1",load:"182-195 lbs",rest:"2-3min"},
+        {name:"Jerk Recoveries (from rack)",sets:3,reps:"2",load:"221-247 lbs",rest:"3min"},
+        {name:"Front Squat (speed)",sets:5,reps:"2",load:"192-208 lbs",rest:"90s"},
+        {name:"Weighted Box Jumps",sets:3,reps:"3",load:"20lb vest or DBs",rest:"2min"},
+      ]},
+    ]},
+    { week:12, phase:"Phase 4: Max Strength II / Power Conversion", phClass:"ph-ms2", days:[
+      { label:"Monday", title:"Snatch (Heavy) + Back Squat", note:"Push toward new heavy territory on the snatch.", exercises:[
+        {name:"Snatch (full)",sets:5,reps:"1",load:"Build to 189-200 lbs",rest:"4min"},
+        {name:"Snatch Pull",sets:3,reps:"2",load:"215-226 lbs",rest:"4min"},
+        {name:"Back Squat",sets:4,reps:"2",load:"352-365 lbs",rest:"4-5min"},
+        {name:"Box Jumps",sets:4,reps:"3",load:"34-38 inch",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk (Heavy) + Front Squat", note:"Heaviest C&J loads to date. Squat doubles approaching 90%.", exercises:[
+        {name:"Clean & Jerk",sets:5,reps:"1+1",load:"Build to 229-242 lbs",rest:"4min"},
+        {name:"Clean Pull",sets:3,reps:"2",load:"260-273 lbs",rest:"4min"},
+        {name:"Front Squat",sets:4,reps:"2",load:"278-288 lbs",rest:"4-5min"},
+        {name:"Depth Jumps (16 inch box)",sets:3,reps:"3",load:"BW",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Snatch Variants + Speed Squats", note:"Moderate speed day. Maintain bar velocity.", exercises:[
+        {name:"Power Snatch",sets:5,reps:"2",load:"157-168 lbs",rest:"2min"},
+        {name:"Snatch Balance",sets:4,reps:"2",load:"146-157 lbs",rest:"2min"},
+        {name:"Back Squat (speed)",sets:5,reps:"2",load:"255-275 lbs",rest:"90s"},
+        {name:"Broad Jumps",sets:4,reps:"3",load:"BW",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"Clean & Jerk Variants + Speed Work", note:"Heavy jerk recoveries to build confidence in overhead position.", exercises:[
+        {name:"Power Clean + Push Jerk",sets:5,reps:"2+1",load:"190-203 lbs",rest:"2-3min"},
+        {name:"Jerk Recoveries",sets:3,reps:"1",load:"234-260 lbs",rest:"3-4min"},
+        {name:"Front Squat (speed)",sets:4,reps:"2",load:"202-218 lbs",rest:"90s"},
+      ]},
+    ]},
+    { week:13, phase:"Phase 4: Max Strength II / Power Conversion", phClass:"ph-ms2", days:[
+      { label:"Monday", title:"Snatch (Peak) + Back Squat", note:"Peak intensity week. Attempt 95% snatch single if feeling strong.", exercises:[
+        {name:"Snatch (full)",sets:5,reps:"1",load:"Build to 194-204 lbs",rest:"4-5min"},
+        {name:"Snatch Pull",sets:3,reps:"2",load:"226-237 lbs",rest:"4min"},
+        {name:"Back Squat",sets:4,reps:"2",load:"365 lbs",rest:"5min"},
+        {name:"Box Jumps",sets:3,reps:"3",load:"36-40 inch",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk (Peak) + Front Squat", note:"Peak intensity. Attempt 95% C&J single if everything is moving well.", exercises:[
+        {name:"Clean & Jerk",sets:5,reps:"1+1",load:"Build to 234-247 lbs",rest:"4-5min"},
+        {name:"Clean Pull",sets:3,reps:"2",load:"273-286 lbs",rest:"4min"},
+        {name:"Front Squat",sets:4,reps:"1",load:"288-298 lbs",rest:"5min"},
+        {name:"Depth Jumps",sets:3,reps:"3",load:"BW",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Speed/Power Day", note:"Speed work only. Keep loads moderate, maximize velocity.", exercises:[
+        {name:"Power Snatch",sets:5,reps:"2",load:"151-161 lbs",rest:"2min"},
+        {name:"Power Clean + Push Jerk",sets:5,reps:"2+1",load:"182-195 lbs",rest:"2min"},
+        {name:"Back Squat (speed)",sets:4,reps:"2",load:"243 lbs",rest:"90s"},
+        {name:"Broad Jumps",sets:3,reps:"4",load:"BW",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"Moderate Lifts + Plyometrics", note:"Moderate day to accumulate quality work without overreaching.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"1",load:"172-178 lbs",rest:"3min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"208-216 lbs",rest:"3min"},
+        {name:"Front Squat",sets:3,reps:"2",load:"256 lbs",rest:"3min"},
+        {name:"Weighted Box Jumps",sets:3,reps:"3",load:"25lb vest",rest:"2min"},
+      ]},
+    ]},
+    { week:14, phase:"Phase 4: Max Strength II (Deload)", phClass:"ph-ms2", days:[
+      { label:"Monday", title:"Snatch + Back Squat (Reduced)", note:"Deload. Reduced volume, moderate intensity. Focus on speed.", exercises:[
+        {name:"Snatch (full)",sets:4,reps:"1",load:"161-172 lbs",rest:"3min"},
+        {name:"Back Squat",sets:3,reps:"2",load:"304 lbs",rest:"3min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk + Front Squat (Reduced)", note:"Deload. Stay sharp but manage fatigue for peaking phase.", exercises:[
+        {name:"Clean & Jerk",sets:4,reps:"1+1",load:"195-208 lbs",rest:"3min"},
+        {name:"Front Squat",sets:3,reps:"2",load:"240 lbs",rest:"3min"},
+      ]},
+      { label:"Thursday", title:"Light Technique", note:"Active recovery. Groove technique, nothing heavy.", exercises:[
+        {name:"Power Snatch",sets:3,reps:"2",load:"129-140 lbs",rest:"2min"},
+        {name:"Power Clean + Jerk",sets:3,reps:"1+1",load:"156-169 lbs",rest:"2min"},
+        {name:"Overhead Squat",sets:3,reps:"3",load:"118 lbs",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"REST", note:"Complete rest. Supercompensation before peaking phase.", exercises:[
+        {name:"Full Rest / Active Recovery",sets:0,reps:"---",load:"---",rest:"---"},
+      ]},
+    ]},
+    { week:15, phase:"Phase 5: Power / Peaking I", phClass:"ph-peak", days:[
+      { label:"Monday", title:"Snatch (Competition Prep) + Squat", note:"Competition-style snatch work. Build up to solid 90% single.", exercises:[
+        {name:"Snatch (full)",sets:6,reps:"1",load:"Build 172→194 lbs",rest:"3-4min"},
+        {name:"Back Squat",sets:3,reps:"2",load:"332 lbs",rest:"4min"},
+        {name:"Snatch Pull",sets:2,reps:"2",load:"204 lbs",rest:"3min"},
+        {name:"Box Jumps",sets:3,reps:"3",load:"36+ inch",rest:"2min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk (Competition Prep) + Squat", note:"Build to solid 90% C&J. Squat volume dropping.", exercises:[
+        {name:"Clean & Jerk",sets:6,reps:"1+1",load:"Build 208→234 lbs",rest:"3-4min"},
+        {name:"Front Squat",sets:3,reps:"2",load:"262 lbs",rest:"4min"},
+        {name:"Clean Pull",sets:2,reps:"2",load:"247 lbs",rest:"3min"},
+        {name:"Depth Jumps",sets:3,reps:"3",load:"BW",rest:"2min"},
+      ]},
+      { label:"Thursday", title:"Speed/Power Day", note:"Speed/power emphasis. Every rep should be maximal velocity.", exercises:[
+        {name:"Power Snatch",sets:4,reps:"2",load:"146-157 lbs",rest:"2min"},
+        {name:"Power Clean + Push Jerk",sets:4,reps:"1+1",load:"177-190 lbs",rest:"2min"},
+        {name:"Back Squat (speed)",sets:3,reps:"2",load:"235 lbs",rest:"90s"},
+        {name:"Broad Jumps",sets:3,reps:"4",load:"BW",rest:"90s"},
+      ]},
+      { label:"Saturday", title:"Moderate Full Lifts", note:"Moderate session. No grinding. Keep CNS fresh.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"1",load:"176-183 lbs",rest:"3min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"213-221 lbs",rest:"3min"},
+        {name:"Front Squat",sets:2,reps:"2",load:"250 lbs",rest:"3min"},
+      ]},
+    ]},
+    { week:16, phase:"Phase 5: Power / Peaking I", phClass:"ph-peak", days:[
+      { label:"Monday", title:"Snatch (Heavy Singles) + Squat", note:"Push toward 93%+ snatch. Squat moving to heavy singles.", exercises:[
+        {name:"Snatch (full)",sets:5,reps:"1",load:"Build 178→200 lbs",rest:"4min"},
+        {name:"Back Squat",sets:3,reps:"1",load:"352-365 lbs",rest:"5min"},
+        {name:"Snatch Pull",sets:2,reps:"2",load:"215 lbs",rest:"3min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk (Heavy Singles) + Front Squat", note:"Push toward 93%+ C&J. Front squat heavy singles.", exercises:[
+        {name:"Clean & Jerk",sets:5,reps:"1+1",load:"Build 216→242 lbs",rest:"4min"},
+        {name:"Front Squat",sets:3,reps:"1",load:"278-288 lbs",rest:"5min"},
+        {name:"Clean Pull",sets:2,reps:"2",load:"260 lbs",rest:"3min"},
+      ]},
+      { label:"Thursday", title:"Speed/Power Day", note:"Speed day. Low volume, high intent. Stay explosive.", exercises:[
+        {name:"Power Snatch",sets:3,reps:"2",load:"140-151 lbs",rest:"2min"},
+        {name:"Power Clean + Push Jerk",sets:3,reps:"1+1",load:"169-182 lbs",rest:"2min"},
+        {name:"Box Jumps",sets:3,reps:"3",load:"Max height",rest:"2min"},
+      ]},
+      { label:"Saturday", title:"Moderate Full Lifts", note:"Moderate session. Confidence-building lifts.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"1",load:"178-183 lbs",rest:"3min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"216-221 lbs",rest:"3min"},
+      ]},
+    ]},
+    { week:17, phase:"Phase 5: Power / Peaking I (Peak Loading)", phClass:"ph-peak", days:[
+      { label:"Monday", title:"Snatch (Peak) + Squat", note:"Peak attempt. Push to 95-98% snatch if positions are solid.", exercises:[
+        {name:"Snatch (full)",sets:5,reps:"1",load:"Build 183→204-211 lbs",rest:"4-5min"},
+        {name:"Back Squat",sets:2,reps:"1",load:"365-377 lbs",rest:"5min"},
+      ]},
+      { label:"Tuesday", title:"Clean & Jerk (Peak) + Front Squat", note:"Peak attempt. Push to 95-98% C&J if clean is moving well.", exercises:[
+        {name:"Clean & Jerk",sets:5,reps:"1+1",load:"Build 221→247-255 lbs",rest:"4-5min"},
+        {name:"Front Squat",sets:2,reps:"1",load:"288-298 lbs",rest:"5min"},
+      ]},
+      { label:"Thursday", title:"Light Speed Work", note:"Very light. Maintenance of speed and CNS readiness.", exercises:[
+        {name:"Power Snatch",sets:3,reps:"2",load:"129 lbs",rest:"2min"},
+        {name:"Power Clean + Jerk",sets:3,reps:"1+1",load:"156 lbs",rest:"2min"},
+      ]},
+      { label:"Saturday", title:"Moderate Confidence Lifts", note:"Solid, confident lifts. No maxing. Trust the preparation.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"1",load:"172-183 lbs",rest:"3min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"208-221 lbs",rest:"3min"},
+      ]},
+    ]},
+    { week:18, phase:"Phase 6: Competition Taper", phClass:"ph-comp", days:[
+      { label:"Monday", title:"Openers + Light Squat", note:"Practice openers. Everything should feel fast and confident.", exercises:[
+        {name:"Snatch (full)",sets:4,reps:"1",load:"Build to opener: 194-198 lbs",rest:"4min"},
+        {name:"Clean & Jerk",sets:4,reps:"1+1",load:"Build to opener: 234-239 lbs",rest:"4min"},
+        {name:"Back Squat",sets:2,reps:"2",load:"316 lbs",rest:"3min"},
+      ]},
+      { label:"Wednesday", title:"Light Speed Work", note:"Very light. Maintain movement patterns and nervous system readiness.", exercises:[
+        {name:"Power Snatch",sets:3,reps:"2",load:"125-135 lbs",rest:"2min"},
+        {name:"Power Clean + Push Jerk",sets:3,reps:"1+1",load:"151-164 lbs",rest:"2min"},
+        {name:"Front Squat",sets:2,reps:"2",load:"208 lbs",rest:"2min"},
+      ]},
+      { label:"Friday", title:"Opener Rehearsal", note:"Final heavy rehearsal. Make openers, nothing more.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"1",load:"Build to opener: 194-198 lbs",rest:"4min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"Build to opener: 234-239 lbs",rest:"4min"},
+      ]},
+      { label:"Saturday", title:"REST", note:"Complete rest. Nutrition, hydration, sleep optimization.", exercises:[
+        {name:"Full Rest",sets:0,reps:"---",load:"---",rest:"---"},
+      ]},
+    ]},
+    { week:19, phase:"Phase 6: Competition Week", phClass:"ph-comp", days:[
+      { label:"Monday", title:"Light Shakeout", note:"Shakeout only. Light, fast, confident.", exercises:[
+        {name:"Power Snatch",sets:3,reps:"2",load:"118-129 lbs",rest:"2min"},
+        {name:"Power Clean + Push Jerk",sets:3,reps:"1+1",load:"143-156 lbs",rest:"2min"},
+        {name:"Front Squat",sets:2,reps:"2",load:"176 lbs",rest:"2min"},
+      ]},
+      { label:"Wednesday", title:"Final Prep", note:"Last session before comp. Hit 80% and walk away feeling good.", exercises:[
+        {name:"Snatch (full)",sets:3,reps:"1",load:"151-172 lbs",rest:"3min"},
+        {name:"Clean & Jerk",sets:3,reps:"1+1",load:"182-208 lbs",rest:"3min"},
+      ]},
+      { label:"Thursday", title:"REST", note:"Complete rest. Mental visualization. Prepare competition plan.", exercises:[
+        {name:"Full Rest",sets:0,reps:"---",load:"---",rest:"---"},
+      ]},
+      { label:"Saturday", title:"COMPETITION DAY 🏆", note:"COMPETITION. Opener must be a guaranteed make (90-92%). Build based on feel.", exercises:[
+        {name:"Snatch Opener",sets:1,reps:"1",load:"196 lbs",rest:"---"},
+        {name:"Snatch 2nd Attempt",sets:1,reps:"1",load:"204-211 lbs",rest:"---"},
+        {name:"Snatch 3rd Attempt",sets:1,reps:"1",load:"215-219 lbs",rest:"---"},
+        {name:"C&J Opener",sets:1,reps:"1+1",load:"237 lbs",rest:"---"},
+        {name:"C&J 2nd Attempt",sets:1,reps:"1+1",load:"247-255 lbs",rest:"---"},
+        {name:"C&J 3rd Attempt",sets:1,reps:"1+1",load:"260-265 lbs",rest:"---"},
+      ]},
+    ]},
+    { week:20, phase:"Phase 7: Transition / Compensation", phClass:"ph-trans", days:[
+      { label:"Monday", title:"Active Recovery", note:"Active recovery. No barbell work. Move, stretch, and recover.", exercises:[
+        {name:"Light Rowing or Cycling",sets:1,reps:"20 min",load:"Easy pace",rest:"---"},
+        {name:"Bodyweight Squats",sets:2,reps:"15",load:"BW",rest:"60s"},
+        {name:"Push-Ups",sets:2,reps:"15",load:"BW",rest:"60s"},
+        {name:"Band Pull-Aparts",sets:2,reps:"15",load:"Light Band",rest:"45s"},
+        {name:"Full Body Stretching",sets:1,reps:"15 min",load:"---",rest:"---"},
+      ]},
+      { label:"Wednesday", title:"Active Recovery", note:"Low-impact cardio and mobility. Begin mental debrief of the cycle.", exercises:[
+        {name:"Swimming or Light Jogging",sets:1,reps:"20-30 min",load:"Easy pace",rest:"---"},
+        {name:"Foam Rolling",sets:1,reps:"15 min",load:"---",rest:"---"},
+        {name:"Yoga / Mobility Flow",sets:1,reps:"20 min",load:"---",rest:"---"},
+      ]},
+      { label:"Friday", title:"Light Barbell + Play", note:"Fun, light barbell work. Reintroduce movement without intensity.", exercises:[
+        {name:"Muscle Snatch",sets:3,reps:"5",load:"65-75 lbs",rest:"60s"},
+        {name:"Muscle Clean + Press",sets:3,reps:"5+5",load:"78-91 lbs",rest:"60s"},
+        {name:"Goblet Squat",sets:2,reps:"10",load:"50lb DB",rest:"60s"},
+        {name:"Turkish Get-Ups",sets:2,reps:"3/side",load:"25lb KB",rest:"60s"},
+      ]},
+      { label:"Saturday", title:"REST / Recreation", note:"Complete recovery. Plan the next training cycle based on competition results.", exercises:[
+        {name:"Full Rest or Recreational Activity",sets:0,reps:"---",load:"---",rest:"---"},
+      ]},
+    ]},
+  ]
+};
+
+const PHASES_LEGEND = [
+  { label:"Wk 1-3", name:"Anatomical Adaptation", cls:"ph-aa" },
+  { label:"Wk 4-6", name:"Hypertrophy", cls:"ph-hyp" },
+  { label:"Wk 7-10", name:"Max Strength I", cls:"ph-ms1" },
+  { label:"Wk 11-14", name:"Max Strength II / Power", cls:"ph-ms2" },
+  { label:"Wk 15-17", name:"Power / Peaking", cls:"ph-peak" },
+  { label:"Wk 18-19", name:"Competition", cls:"ph-comp" },
+  { label:"Wk 20", name:"Transition", cls:"ph-trans" },
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let state = {
+  selectedWeek: 0,   // index
+  selectedDay: 0,    // index
+  completedSets: {},
+  completedWorkouts: {},
+};
+
+async function loadState() {
+  try {
+    const r = await fetch("/progress");
+    if (r.ok) {
+      const p = await r.json();
+      state.completedSets = p.sets || {};
+      state.completedWorkouts = p.workouts || {};
+    }
+  } catch(e) {
+    // fallback to localStorage if API unreachable
+    const s = localStorage.getItem("oly_progress_v1");
+    if (s) {
+      const p = JSON.parse(s);
+      state.completedSets = p.sets || {};
+      state.completedWorkouts = p.workouts || {};
+    }
+  }
+}
+
+function saveState() {
+  const data = { sets: state.completedSets, workouts: state.completedWorkouts };
+  fetch("/progress", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  }).catch(() => {
+    // fallback to localStorage if API unreachable
+    localStorage.setItem("oly_progress_v1", JSON.stringify(data));
+  });
+}
+
+function setKey(wIdx, dIdx, eIdx, sNum) {
+  return `${wIdx}-${dIdx}-${eIdx}-${sNum}`;
+}
+function workoutKey(wIdx, dIdx) {
+  return `${wIdx}-${dIdx}`;
+}
+
+function isSetDone(wIdx, dIdx, eIdx, sNum) {
+  return !!state.completedSets[setKey(wIdx, dIdx, eIdx, sNum)];
+}
+function isWorkoutDone(wIdx, dIdx) {
+  return !!state.completedWorkouts[workoutKey(wIdx, dIdx)];
+}
+
+function toggleSet(wIdx, dIdx, eIdx, sNum) {
+  const k = setKey(wIdx, dIdx, eIdx, sNum);
+  state.completedSets[k] = !state.completedSets[k];
+  saveState();
+}
+function toggleWorkout(wIdx, dIdx) {
+  const k = workoutKey(wIdx, dIdx);
+  state.completedWorkouts[k] = !state.completedWorkouts[k];
+  saveState();
+}
+
+function getWeekPct(wIdx) {
+  const week = PROGRAM.weeks[wIdx];
+  let total = 0, done = 0;
+  week.days.forEach((day, dIdx) => {
+    day.exercises.forEach((ex, eIdx) => {
+      if (ex.sets > 0) {
+        for (let s = 0; s < ex.sets; s++) {
+          total++;
+          if (isSetDone(wIdx, dIdx, eIdx, s)) done++;
+        }
+      }
+    });
+  });
+  return total > 0 ? Math.round((done / total) * 100) : 0;
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════
+
+function getAccentColor(phClass) {
+  const map = {
+    'ph-aa':   '#3ddc84',
+    'ph-hyp':  '#4da6ff',
+    'ph-ms1':  '#b57aff',
+    'ph-ms2':  '#ff9a3d',
+    'ph-peak': '#ff4d4d',
+    'ph-comp': '#ffd700',
+    'ph-trans':'#888888',
+  };
+  return map[phClass] || '#888888';
+}
+
+function renderWeekList() {
+  // Legend
+  const legend = document.getElementById('phase-legend');
+  legend.innerHTML = PHASES_LEGEND.map(p => `
+    <div class="legend-pill ${p.cls}">
+      <span class="wk">${p.label}</span>
+      <span class="nm">${p.name}</span>
+    </div>
+  `).join('');
+
+  // Weeks
+  const list = document.getElementById('week-list');
+  list.innerHTML = PROGRAM.weeks.map((week, wIdx) => {
+    const selected = wIdx === state.selectedWeek;
+    const pct = getWeekPct(wIdx);
+    const accent = getAccentColor(week.phClass);
+    const barsHtml = week.days.map((d, dIdx) =>
+      `<div class="week-bar ${isWorkoutDone(wIdx, dIdx) ? 'done' : ''}"></div>`
+    ).join('');
+
+    const daysHtml = week.days.map((day, dIdx) => {
+      const done = isWorkoutDone(wIdx, dIdx);
+      return `
+        <button class="day-btn ${done ? 'workout-done' : ''}"
+                style="${done ? '' : `--phase-accent:${accent}`}"
+                data-widx="${wIdx}" data-didx="${dIdx}">
+          <div class="day-btn-header">
+            <span class="day-label" style="color:${done ? '#3ddc84' : accent}">${day.label}</span>
+            ${done ? '<span class="day-done-badge">✓</span>' : ''}
+          </div>
+          <div class="day-title">${day.title}</div>
+          <div class="day-ex-count">${day.exercises.length} exercises</div>
+        </button>`;
+    }).join('');
+
+    return `
+      <div class="week-card ${selected ? 'selected' : ''}"
+           style="--phase-accent:${accent}"
+           data-widx="${wIdx}">
+        <div class="week-card-header">
+          <div class="week-num">${week.week}</div>
+          <div class="week-meta">
+            <div class="week-phase">${week.phase}</div>
+            <div class="week-bars">${barsHtml}</div>
+          </div>
+          <div class="week-pct">${pct}%</div>
+        </div>
+        <div class="week-days-grid">
+          ${daysHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Events - week card headers
+  document.querySelectorAll('.week-card').forEach(card => {
+    card.querySelector('.week-card-header').addEventListener('click', () => {
+      const wIdx = parseInt(card.dataset.widx);
+      state.selectedWeek = (state.selectedWeek === wIdx) ? -1 : wIdx;
+      renderWeekList();
+    });
+  });
+
+  // Events - day buttons
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.selectedDay = parseInt(btn.dataset.didx);
+      state.selectedWeek = parseInt(btn.dataset.widx);
+      showDayView();
+    });
+  });
+}
+
+function showDayView() {
+  document.getElementById('week-view').classList.remove('active');
+  document.getElementById('day-view').classList.add('active');
+  renderDayView();
+}
+
+function showWeekView() {
+  document.getElementById('day-view').classList.remove('active');
+  document.getElementById('week-view').classList.add('active');
+  renderWeekList();
+}
+
+function renderDayView() {
+  const wIdx = state.selectedWeek;
+  const dIdx = state.selectedDay;
+  const week = PROGRAM.weeks[wIdx];
+  const day = week.days[dIdx];
+  const accent = getAccentColor(week.phClass);
+
+  // Header
+  document.getElementById('dh-weekday').textContent = `Week ${week.week} · ${day.label}`;
+  document.getElementById('dh-weekday').style.color = accent;
+  document.getElementById('dh-title').textContent = day.title;
+  document.getElementById('dh-phase').textContent = week.phase;
+  document.getElementById('day-note').textContent = day.note;
+  document.getElementById('day-note').style.borderLeftColor = accent;
+
+  // Day header background tint
+  const dayHeader = document.getElementById('day-header');
+  dayHeader.style.background = '';
+
+  // Mark done btn
+  const markBtn = document.getElementById('mark-done-btn');
+  const done = isWorkoutDone(wIdx, dIdx);
+  markBtn.textContent = done ? '✓ Done' : 'Mark Done';
+  markBtn.className = 'done' in markBtn.dataset ? 'done' : '';
+  if (done) markBtn.classList.add('done');
+
+  // Exercises
+  const exList = document.getElementById('exercise-list');
+  exList.innerHTML = day.exercises.map((ex, eIdx) => {
+    if (ex.sets === 0) {
+      return `
+        <div class="ex-card">
+          <div class="ex-card-header">
+            <div class="ex-name">${ex.name}</div>
+          </div>
+          <div class="rest-day-msg">Rest day — recovery and mobility only.</div>
+        </div>`;
+    }
+    const setsHtml = Array.from({length: ex.sets}, (_, sIdx) => {
+      const isDone = isSetDone(wIdx, dIdx, eIdx, sIdx);
+      return `<button class="set-btn ${isDone ? 'done' : ''}"
+                      data-widx="${wIdx}" data-didx="${dIdx}"
+                      data-eidx="${eIdx}" data-snum="${sIdx}"
+                      style="${isDone ? '' : `--phase-accent-val:${accent}`}">
+                ${isDone ? '✓' : sIdx + 1}
+              </button>`;
+    }).join('');
+
+    return `
+      <div class="ex-card">
+        <div class="ex-card-header">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-badge" style="color:${accent}">${ex.sets}×${ex.reps}</div>
+        </div>
+        <div class="ex-meta">
+          <span>🏋️ ${ex.load}</span>
+          <span>⏱ ${ex.rest}</span>
+        </div>
+        <div class="set-row">${setsHtml}</div>
+      </div>`;
+  }).join('');
+
+  // Set button events
+  document.querySelectorAll('.set-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const w = parseInt(btn.dataset.widx);
+      const d = parseInt(btn.dataset.didx);
+      const e = parseInt(btn.dataset.eidx);
+      const s = parseInt(btn.dataset.snum);
+      toggleSet(w, d, e, s);
+      renderDayView();
+    });
+  });
+
+  // Nav buttons
+  const nav = document.getElementById('day-nav');
+  const prevDay = dIdx > 0 ? week.days[dIdx - 1] : null;
+  const nextDay = dIdx < week.days.length - 1 ? week.days[dIdx + 1] : null;
+  nav.innerHTML = `
+    ${prevDay ? `<button class="day-nav-btn" data-dir="prev">← ${prevDay.label}</button>` : ''}
+    ${nextDay ? `<button class="day-nav-btn forward" data-dir="next" style="color:${accent};border-color:${accent}20">${nextDay.label} →</button>` : ''}
+  `;
+  nav.querySelectorAll('.day-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.dir === 'prev') state.selectedDay--;
+      else state.selectedDay++;
+      renderDayView();
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// EVENTS
+// ════════════════════════════════════════════════════════════
+
+document.getElementById('back-btn').addEventListener('click', showWeekView);
+
+document.getElementById('mark-done-btn').addEventListener('click', () => {
+  toggleWorkout(state.selectedWeek, state.selectedDay);
+  renderDayView();
+});
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+(async () => { await loadState(); renderWeekList(); })();
+</script>
+</body>
+</html>

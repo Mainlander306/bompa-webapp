@@ -1,0 +1,12 @@
+[Unit]
+Description=Olympic Lifting Progress API
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/mainlander/oly_api.py
+Restart=always
+User=mainlander
+WorkingDirectory=/home/mainlander
+
+[Install]
+WantedBy=multi-user.target
